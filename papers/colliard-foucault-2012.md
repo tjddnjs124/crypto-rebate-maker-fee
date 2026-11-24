@@ -1,38 +1,9 @@
 # Colliard & Foucault (2012)
 
-## 인용
+Jean-Edouard Colliard & Thierry Foucault, “Trading Fees and Efficiency in Limit Order Markets,” *Review of Financial Studies* 25(11), 3389–3421. [출판사 초록 및 서지](https://academic.oup.com/rfs/article-abstract/25/11/3389/1566107) · [DOI](https://doi.org/10.1093/rfs/hhs089)
 
-Colliard, J.-E., & Foucault, T. (2012). Trading Fees and Efficiency in Limit Order Markets. *Review of Financial Studies*, 25(11), 3389-3421.
+저자들은 수수료 수준과 maker/taker 배분이 지정가 체결확률과 spread에 미치는 영향을 모형화했다. 마찰 없는 모형에서 전체 fee가 일정할 때 배분 변화의 가격 조정과 중립성을 논의한다. 수수료 인하가 limit order 경쟁을 높여 fill probability를 떨어뜨릴 수 있다는 점도 제시한다.
 
-DOI: [10.1093/rfs/hhs074](https://doi.org/10.1093/rfs/hhs074)
+이론의 가정 아래 배분이 중립적이라는 결과를, 실거래의 모든 rebate 전략이 실패한다거나 1틱 시장만 수익 가능하다는 주장으로 확대할 수 없다. 다른 규칙과 제약을 둔 [Lin 외 2025](lin-swan-harris-2025.md)도 함께 본다.
 
-## 핵심 주장
-
-**틱크가 연속적이고 마찰이 없다면, maker 리베이트와 taker 수수료의 배분은 시장 효율에 아무 영향이 없다.**
-
-오직 총수수료(make fee + take fee)만이 의미가 있다. Maker에게 리베이트를 주고 taker에게 비용을 물리는 것이 경쟁 시장에서 가격에 의해 완전히 상쇄되기 때문이다.
-
-## 논리
-
-1. Exchange가 maker rebate r을 도입하고 taker fee를 r만큼 증가시킨다.
-2. Trader들이 limit order를 더 쓰기 시작한다.
-3. 각 limit order의 체결확률이 감소한다.
-4. Trader들이 체결확률을 회복하려고 더 경쟁적인 호가를 낸다.
-5. 스프레드가 리베이트만큼 좁아진다.
-6. 결과적으로 리베이트가 스프레드에 정확히 흡수되어 아무 효과가 없다.
-
-## 전략에 주는 시사점
-
-**이 논문은 리베이트 전략의 존재를 부정하는 논문이다.**
-
-스프레드가 자유롭게 조정될 수 있는 시장에서는, maker 리베이트가 있든 없든 마켓메이커의 실질 수익이 같다는 것이다. 따라서 "maker 리베이트만 수확" 전략이 존재하려면 **스프레드가 리베이트를 흡수할 만큼 자유롭지 않아야** 한다.
-
-이 조건이 만족되는 경우:
-- 스프레드가 최소 틱크에 갇혀 있을 때
-- 가격 경쟁이 제한적일 때
-
-## 한계
-
-- 완전경쟁 가정이 강하다
-- 실제 시장에서는 틱크 이산성, 모니터링 비용, 정보 비대칭이 존재
-- 암호화폐 시장에 직접 적용하려면 거래소 구조 차이를 고려해야 함
+정정 2026-11-24. 기존 DOI hhs074는 잘못 기재되어 hhs089로 교체했다.

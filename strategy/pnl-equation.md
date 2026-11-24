@@ -1,77 +1,43 @@
-# 순수익 모형
+# 손익과 rebate 기여도
 
-## 핵심 식
+## 최종 원장
 
-```text
-E[PnL] = Σ ( rebate × fill_probability × order_size )
-       − Σ ( inventory_cost × sigma^2 × holding_time )
-       − Σ ( adverse_selection_cost × informed_trade_probability )
-       − Σ ( spoofing_loss × spoof_encounter_rate )
-```
-
-각 항의 의미와 측정 방법을 아래에 정리한다.
-
-## 1. 리베이트 수익
+같은 기준통화에서, 초기와 종료의 현금·포지션·가격 및 외부 입출금을 일관되게 대사한다.
 
 ```text
-rebate × fill_probability × order_size
+순손익 = 가격 실현손익 + 잔여 inventory 평가손익
+       + 실제 maker rebate - 실제 거래 수수료
+       + 수취 funding - 지급 funding - 차입·헤지·운영비
 ```
 
-| 변수 | 측정 | 비고 |
-|---|---|---|
-| rebate | 거래소 수수료표 (VIP 등급별) | Binance VIP9 -0.003% 등 |
-| fill_probability | 체결률 (1틱 내측 vs 외측) | Cont-Kukanov-Stoikov류 분석 필요 |
-| order_size | 주문 크기 | 클수록 큐우선도 영향 |
+계약별 정산 방식에 맞춘다. BTC 담보 inverse 계약이면 BTC 수량으로 먼저 계산하고 법정화폐 환산을 따로 표시한다. 주문 체결 전에는 rebate가 없다. 부분체결은 실제 체결량에 대해서만 계산하고, 열린 inventory에 가상의 종료 rebate를 주지 않는다.
 
-**주의:** fill_probability가 높다고 항상 좋은 것은 아니다. Adverse selection 참조.
+## 비용 우위와 절대 수익
 
-## 2. 인벤토리 비용
+고정된 fills에서 `rebate 기여 = Σ(각 체결 명목 × 실제 rebate율)`이다. 동일 원장에 fee 0, 일반 fee, 개인 rebate를 대입하면 실행경로를 고정한 요율 민감도다. 실거래에서 요율에 반응한 quote와 fill이 바뀌는 효과는 다시 측정해야 한다.
+
+Rebate가 주된 원천인 엄격한 조건은 `rebate 전 순손익 ≤ 0`이면서 `rebate 후 순손익 > 0`이다. 양수여도 한 표본의 성과다.
+
+## 체결의 질 — markout
+
+매수는 `s=+1`, 매도는 `s=-1`. `P`는 내 체결가, `M0`는 체결 직전 mid, `Mh`는 h 뒤 mid다. 각각 체결 당시 기준 가격으로 나눠 bp로 변환한다.
 
 ```text
-inventory_cost × sigma^2 × holding_time
+즉시 가격 이점 = s × (M0 - P)
+체결 후 가격 이동 = s × (Mh - M0)
+h 시점 markout = s × (Mh - P)
+                = 즉시 가격 이점 + 체결 후 가격 이동
+fee 포함 markout = h 시점 markout + 해당 fill rebate - 해당 fill fee
 ```
 
-| 변수 | 측정 | 비고 |
-|---|---|---|
-| inventory_cost | 인벤토리 크기 × 가격 변동 | Avellaneda-Stoikov의 q·sigma² 항 |
-| sigma^2 | 실현 변동성 | 1분 봉 등 고빈도 추정 |
-| holding_time | 인벤토리 유지 시간 | 반대편 체결까지의 대기 |
+Markout은 체결 조건부 진단값이며 최종 실현손익이 아니다. 이미 markout에 포함한 체결 후 가격 이동을 adverse selection으로 다시 빼지 않는다. 실제 최종 PnL은 모든 fills와 funding, 기말 inventory로 계산한다. 미래 mid는 청산 가능 가격을 보장하지 않는다.
 
-**제어:** 인벤토리 상한 Q를 두고, 초과 시 해당 방향 호가 중단 (Guéant-Lehalle-Tapia).
+가정 예시에서 즉시 이점 +0.4bp, 체결 후 이동 −0.7bp, rebate +0.2bp면 fee 포함 markout은 −0.1bp다. 실제 청산의 spread, fee 및 funding은 따로 고려한다.
 
-## 3. Adverse Selection 비용
+## 종료 방식별 비용
 
-```text
-adverse_selection_cost × informed_trade_probability
-```
+- Maker 종료도 체결이 불확실하다. 시간 제한에 걸려 남은 재고를 계속 평가하거나 강제 헤지 비용을 지불한다.
+- Taker 종료면 종료 수수료와 실행가격을 넣는다. 종료 명목 전체에 maker rebate를 가정하지 않는다.
+- 양방향을 동시에 올려도 한쪽만 체결될 수 있다. 최소 단위·가격 단위·잔량·주문 취소 지연·margin을 반영한다.
 
-| 변수 | 측정 | 비고 |
-|---|---|---|
-| adverse_selection_cost | realized spread (체결가 - N초 후 미드) | 음수면 손실 |
-| informed_trade_probability | 정보 거래 비율 | 선물-현물 lead, 대형 주문 신호 |
-
-**방어:** `../risks/adverse-selection.md` 참조.
-
-## 4. Spoofing 손실
-
-```text
-spoofing_loss × spoof_encounter_rate
-```
-
-암호화폐 거래소에서 규제가 약하므로 무시할 수 없다.
-
-**방어:** `../risks/spoofing.md` 참조.
-
-## 전략이 성립하는 조건
-
-```text
-rebate × fill_probability > inventory_cost + adverse_selection + spoofing_loss
-```
-
-즉, **리베이트당 체결이 만드는 총비용을 초과해야 한다.**
-
-이 조건이 만족되기 쉬운 경우:
-- 스프레드가 1틱에 갇혀 있고 (틱크 제약)
-- 변동성이 낮고 (인벤토리 비용 작음)
-- 정보 비대칭이 적고 (adverse selection 작음)
-- 조작이 드물 때 (spoofing 빈도 낮음)
+1bp = 0.01% = 0.0001. 예를 들어 0.002%는 0.2bp이고 100만 USDT 체결의 rebate는 20 USDT다.
